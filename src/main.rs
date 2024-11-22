@@ -11,11 +11,11 @@ struct ChipP {
     pc: u32,
     steps_since_start: u32,
     sp: u16,
-    stack: [u32; 1024],
+    stack: Box<[u32; 1024]>,
     rom: Vec<u8>,
     rom_size: usize,
-    memory: [u8; 65536],
-    display_buffers: [[[u32; 480]; 640]; 2], // display_buffers[current_buffer][y][x] = color (RGBA8888)
+    memory: Box<[u8; 65536]>,
+    display_buffers: Box<[[[u32; 480]; 640]; 2]>, // display_buffers[current_buffer][y][x] = color (RGBA8888)
     current_buffer: u8,
     opcode: u8,
 }
@@ -27,11 +27,11 @@ impl ChipP {
             pc: 0,
             steps_since_start: 0,
             sp: 0,
-            stack: [0; 1024],
+            stack: Box::new([0; 1024]),
             rom: Vec::new(),
             rom_size: 0,
-            memory: [0; 65536],
-            display_buffers: [[[0; 480]; 640]; 2],
+            memory: Box::new([0; 65536]),
+            display_buffers: Box::new([[[0; 480]; 640]; 2]),
             current_buffer: 0,
             opcode: 0,
         }
@@ -348,7 +348,7 @@ struct Args {
 async fn main() {
     let args = Args::parse();
     let rom_path = args.rom.unwrap_or("res/out.p16".to_string());
-    let mut state = Box::new(ChipP::new());
+    let mut state = ChipP::new();
     state.load_rom(rom_path);
     // clear_background(BLACK);
     // let array: Vec<usize> = (0..state.rom_size).collect();
