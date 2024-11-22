@@ -31,7 +31,7 @@ function op_store_i(reg1, addr){
     return [0x02, reg1, addr >> 8, addr];
 }
 
-function op_load_i(reg1, addr){
+function op_load_i(reg1, val){
     reg1 = parseInt(reg1);
     addr = parseInt(addr);
     return [0x03, reg1, val >> 8, val];
@@ -230,4 +230,4 @@ function parse_program(lines){
     return Uint8Array.from(out);
 }
 let t = inputFile.split("\n");
-fs.writeFileSync("/home/pixlperfect01/CLionProjects/ChipP/res/out.p16", parse_program(t));
+fs.writeFileSync("out.p16", parse_program(t));

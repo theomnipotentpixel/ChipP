@@ -2,7 +2,7 @@ use std::io::Write;
 use std::{fs};
 use std::ops::{Div, Mul};
 use std::process::exit;
-use std::time::{Duration, Instant};
+use std::time::{Instant};
 use macroquad::prelude::*;
 use clap::Parser;
 
@@ -11,27 +11,32 @@ struct ChipP {
     pc: u32,
     steps_since_start: u32,
     sp: u16,
-    stack: Box<[u32; 1024]>,
+    stack: Vec<u32>,
     rom: Vec<u8>,
     rom_size: usize,
-    memory: Box<[u8; 65536]>,
-    display_buffers: Box<[[[u32; 480]; 640]; 2]>, // display_buffers[current_buffer][y][x] = color (RGBA8888)
+    memory: Vec<u8>,
+    display_buffers: Vec<Vec<Vec<u32>>>, // display_buffers[current_buffer][y][x] = color (RGBA8888)
     current_buffer: u8,
     opcode: u8,
 }
 
 impl ChipP {
     fn new() -> Self {
+        let mut stack: Vec<u32> = Vec::with_capacity(1024);
+        let mut memory: Vec<u8> = Vec::with_capacity(65535);
+
+        let mut display_buffers: Vec<Vec<Vec<u32>>> = vec![vec![vec![0; 640]; 480]; 2];
+
         Self {
             registers: [0; 16],
             pc: 0,
             steps_since_start: 0,
             sp: 0,
-            stack: Box::new([0; 1024]),
+            stack,
             rom: Vec::new(),
             rom_size: 0,
-            memory: Box::new([0; 65536]),
-            display_buffers: Box::new([[[0; 480]; 640]; 2]),
+            memory,
+            display_buffers,
             current_buffer: 0,
             opcode: 0,
         }
@@ -39,33 +44,34 @@ impl ChipP {
 
     pub fn load_rom(&mut self, rom_path: String){
         let data = fs::read(rom_path).unwrap();
-        if data.len() as usize > 65536*65536 {
+        if data.len() > 65536*65536 {
             panic!("ROM file is too large!");
         }
         self.rom = data;
         self.rom_size = self.rom.len();
     }
 
+    #[allow(dead_code)]
     pub fn load_rom_raw(&mut self, rom: &[u8]) {
         self.rom = rom.to_vec();
         self.rom_size = self.rom.len();
     }
 
     pub fn get8rom(&mut self) -> u8 {
-        let out = self.rom[(self.pc) as usize];
+        let out = self.rom[self.pc as usize];
         self.pc = self.pc.wrapping_add(1);
         out
     }
 
     pub fn get16rom(&mut self) -> u16 {
-        let out = ((self.rom[(self.pc) as usize] as u16) << 8) | self.rom[(self.pc+1) as usize] as u16;
+        let out = ((self.rom[self.pc as usize] as u16) << 8) | self.rom[(self.pc+1) as usize] as u16;
         self.pc = self.pc.wrapping_add(2);
         out
     }
 
     #[allow(dead_code)]
     pub fn get32rom(&mut self) -> u32 {
-        let out = ((self.rom[(self.pc) as usize] as u32) << 24) |
+        let out = ((self.rom[self.pc as usize] as u32) << 24) |
             ((self.rom[(self.pc+1) as usize] as u32) << 16) |
             ((self.rom[(self.pc+2) as usize] as u32) << 8) |
             self.rom[(self.pc+3) as usize] as u32;
@@ -103,7 +109,7 @@ impl ChipP {
     }
 
     pub fn step(&mut self) -> bool {
-        if(self.pc >= self.rom_size as u32) {
+        if self.pc >= self.rom_size as u32 {
             return false;
             }
         self.opcode = self.get8rom();
@@ -280,11 +286,11 @@ impl ChipP {
     // print a null terminated string from rom starting at addr (val1)
     pub fn op_print_str_rom(&mut self){
         let mut addr = self.get32rom();
-        let mut c = self.rom[(addr) as usize];
+        let mut c = self.rom[addr as usize];
         while c != 0x00 {
             print!("{}", c as char);
             addr += 1;
-            c = self.rom[(addr) as usize];
+            c = self.rom[addr as usize];
         }
         std::io::stdout().flush().unwrap();
     }
@@ -348,26 +354,25 @@ struct Args {
 async fn main() {
     let args = Args::parse();
     let rom_path = args.rom.unwrap_or("res/out.p16".to_string());
-    let mut state = ChipP::new();
+    let mut state = Box::new(ChipP::new());
     state.load_rom(rom_path);
+    println!("{}, {}, {}", state.display_buffers.len(), state.display_buffers[0].len(), state.display_buffers[0][0].len());
+    // panic!("");
     // clear_background(BLACK);
     // let array: Vec<usize> = (0..state.rom_size).collect();
     // println!("{:02X?}", array);
     // println!("{:02X?}", state.rom);
     // println!("{:#04X}, {:#04X}", state.pc, state.rom[0]);
-    let mut last_step = Instant::now();
+    // let mut last_step = Instant::now();
     let mut last_frame = Instant::now();
     loop {
         if is_key_down(KeyCode::Escape) {
             break;
         }
         state.step();
-        if last_step.elapsed().as_micros() > 500u128 {
-            last_step = std::time::Instant::now();
-        }
 
         if last_frame.elapsed().as_secs_f32() > 1f32 / 60f32 {
-            last_frame = std::time::Instant::now();
+            last_frame = Instant::now();
             next_frame().await;
             state.draw_buffer();
         }
