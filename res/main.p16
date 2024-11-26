@@ -9,4 +9,4 @@ draw_pixel 0 1 0xFF0000
 jne 2 1 loop_y
 jne 2 0 loop_x
 swap_buffers
-byte 0x00
+bytes 0x00

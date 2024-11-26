@@ -171,6 +171,17 @@ function op_draw_sprite(reg1, reg2, label){
     return [0x16, reg1, reg2, label >> 24, label >> 16, label >> 8, label];
 }
 
+function op_jgt(reg1, reg2, label){
+    reg1 = parseInt(reg1);
+    reg2 = parseInt(reg2);
+    label = LABELS[label];
+    if(label === undefined){
+        console.error("UNDEFINED LABEL!");
+        return false;
+    }
+    return [0x17, reg1, reg2, label >> 24, label >> 16, label >> 8, label];
+}
+
 let OPS = {
     "mov": [op_mov, 5],
     "store_i": [op_store_i, 5],
@@ -194,6 +205,7 @@ let OPS = {
     "swap_buffers": [op_swap_buffers, 0],
     "draw_pixel": [op_draw_pixel, 6],
     "draw_sprite": [op_draw_sprite, 6],
+    "jgt": [op_jgt, 6],
 }
 
 let LABELS = {};
@@ -246,4 +258,4 @@ function parse_program(lines){
 }
 let t = inputFile.split("\n");
 console.log(parse_program(t)[0])
-fs.writeFileSync("out.p16", parse_program(t));
+fs.writeFileSync("out.p", parse_program(t));
