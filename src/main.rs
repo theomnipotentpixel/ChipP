@@ -194,6 +194,9 @@ impl ChipP {
             0x15 => self.op_draw_pixel(),
             0x16 => self.op_draw_sprite(),
             0x17 => self.op_jgt(),
+            0x18 => self.op_jlt(),
+            0x19 => self.op_jge(),
+            0x1A => self.op_jle(),
             0xFF => return false,
             _ => {}
         }
@@ -312,16 +315,6 @@ impl ChipP {
         }
     }
 
-    /// jump to addr (val3) if reg1 (val1) is greater than reg2 (val2)
-    pub fn op_jgt(&mut self) {
-        let reg1 = self.get8rom();
-        let reg2 = self.get8rom();
-        let addr = self.get32rom();
-        if self.registers[reg1 as usize] > self.registers[reg2 as usize] {
-            self.pc = addr;
-        }
-    }
-
     /// store a null terminated string located in rom at addr (val1) into memory starting at rom addr (val2)
     pub fn op_store_str(&mut self){
         let mut addr1 = self.get32rom();
@@ -425,7 +418,46 @@ impl ChipP {
         }
         let texture = Texture2D::from_rgba8(width as u16, height as u16, &bytes);
         self.sprites.insert(addr, texture);
+    }
 
+    /// jump to addr (val3) if reg1 (val1) is greater than reg2 (val2)
+    pub fn op_jgt(&mut self) {
+        let reg1 = self.get8rom();
+        let reg2 = self.get8rom();
+        let addr = self.get32rom();
+        if self.registers[reg1 as usize] > self.registers[reg2 as usize] {
+            self.pc = addr;
+        }
+    }
+
+    /// jump to addr (val3) if reg1 (val1) is less than reg2 (val2)
+    pub fn op_jlt(&mut self) {
+        let reg1 = self.get8rom();
+        let reg2 = self.get8rom();
+        let addr = self.get32rom();
+        if self.registers[reg1 as usize] < self.registers[reg2 as usize] {
+            self.pc = addr;
+        }
+    }
+
+    /// jump to addr (val3) if reg1 (val1) is greater than or equal to reg2 (val2)
+    pub fn op_jge(&mut self) {
+        let reg1 = self.get8rom();
+        let reg2 = self.get8rom();
+        let addr = self.get32rom();
+        if self.registers[reg1 as usize] >= self.registers[reg2 as usize] {
+            self.pc = addr;
+        }
+    }
+
+    /// jump to addr (val3) if reg1 (val1) is less than or equal to reg2 (val2)
+    pub fn op_jle(&mut self) {
+        let reg1 = self.get8rom();
+        let reg2 = self.get8rom();
+        let addr = self.get32rom();
+        if self.registers[reg1 as usize] <= self.registers[reg2 as usize] {
+            self.pc = addr;
+        }
     }
 }
 

@@ -182,6 +182,39 @@ function op_jgt(reg1, reg2, label){
     return [0x17, reg1, reg2, label >> 24, label >> 16, label >> 8, label];
 }
 
+function op_jlt(reg1, reg2, label){
+    reg1 = parseInt(reg1);
+    reg2 = parseInt(reg2);
+    label = LABELS[label];
+    if(label === undefined){
+        console.error("UNDEFINED LABEL!");
+        return false;
+    }
+    return [0x18, reg1, reg2, label >> 24, label >> 16, label >> 8, label];
+}
+
+function op_jge(reg1, reg2, label){
+    reg1 = parseInt(reg1);
+    reg2 = parseInt(reg2);
+    label = LABELS[label];
+    if(label === undefined){
+        console.error("UNDEFINED LABEL!");
+        return false;
+    }
+    return [0x19, reg1, reg2, label >> 24, label >> 16, label >> 8, label];
+}
+
+function op_jle(reg1, reg2, label){
+    reg1 = parseInt(reg1);
+    reg2 = parseInt(reg2);
+    label = LABELS[label];
+    if(label === undefined){
+        console.error("UNDEFINED LABEL!");
+        return false;
+    }
+    return [0x1A, reg1, reg2, label >> 24, label >> 16, label >> 8, label];
+}
+
 let OPS = {
     "mov": [op_mov, 5],
     "store_i": [op_store_i, 5],
@@ -206,6 +239,9 @@ let OPS = {
     "draw_pixel": [op_draw_pixel, 6],
     "draw_sprite": [op_draw_sprite, 6],
     "jgt": [op_jgt, 6],
+    "jlt": [op_jlt, 6],
+    "jge": [op_jge, 6],
+    "jle": [op_jle, 6],
 }
 
 let LABELS = {};
