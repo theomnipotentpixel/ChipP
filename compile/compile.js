@@ -1,24 +1,24 @@
-const fs = require("fs");
-const exit = require("process").exit;
-const { Jimp } = require("jimp");
-let inputFile = fs.readFileSync("main.p16", {encoding: "utf-8"});
+import {exit} from "process";
+import { writeFileSync, readFileSync } from "fs";
+import { Jimp } from "Jimp";
+let inputFile = readFileSync("main.p16", {encoding: "utf-8"});
 
-function loadImage(path){
-    let pixels;
-    (async () => {
-        const data = await Jimp.read(path);
-        pixels = (data.bitmap.data); // RGBA
-    })();
-    return pixels;
+async function loadImage(path){
+    let width, height, pixels;
+    const data = await Jimp.read(path);
+    width = data.width;
+    height = data.height;
+    pixels = data.bitmap.data; // RGBA
+    return [width, height, pixels];
 }
 
 function split_str(str){
-    var regx = /[^\s"]+|"([^"]*)"/gi;
-    var out = [];
-
+    let regx = /[^\s"]+|"([^"]*)"/gi;
+    let out = [];
+    let match = null;
     do {
         //Each call to exec returns the next regex match as an array
-        var match = regx.exec(str);
+        match = regx.exec(str);
         if (match != null)
         {
             //Index 1 in the array is the captured group if it exists
@@ -256,11 +256,11 @@ let OPS = {
 
 let LABELS = {};
 
-function parse_program(lines){
+async function parse_program(lines){
     let out = [];
     let line_num = 1;
     let ops = 0;
-    for(line of lines){
+    for(let line of lines){
         let params = split_str(line);
         let op = params.shift();
         if(op === "label"){
@@ -274,6 +274,11 @@ function parse_program(lines){
             ops += params[0].length + 1; // +1 for null termination
         } else if(op === "bytes"){
             ops += params.length;
+        } else if(op === "load_img") {
+            ops += 4;
+            let img = await loadImage(params[0]);
+            console.log(img)
+            ops += img[2].length;
         } else if(OPS[op] !== undefined) {
             ops += OPS[op][1] + 1; // +1 for instruction
         }
@@ -281,7 +286,7 @@ function parse_program(lines){
     }
     console.log(LABELS);
     line_num = 1;
-    for(line of lines){
+    for(let line of lines){
         let params = split_str(line);
         let op = params.shift();
         if(op === "string"){
@@ -290,6 +295,11 @@ function parse_program(lines){
             out = out.concat([0]);
         } else if(op === "bytes"){
             out = out.concat(params.map(b => parseInt(b)));
+        } else if(op === "load_img") {
+            let img = await loadImage(params[0]);
+
+            out = out.concat([img[0] >> 8, img[0], img[1] >> 8, img[1]]);
+            out = out.concat([...img[2]]);
         } else if(OPS[op] !== undefined){
             let ret = OPS[op][0](...params);
             if(ret === false){
@@ -304,4 +314,4 @@ function parse_program(lines){
 }
 let t = inputFile.split("\n");
 console.log(parse_program(t)[0])
-fs.writeFileSync("out.p", parse_program(t));
+writeFileSync("out.p", await parse_program(t));

@@ -222,8 +222,8 @@ impl ChipP {
         let addr = self.get32rom();
         self.memory[addr as usize] = ((self.registers[reg as usize] >> 24) & 0xff) as u8;
         self.memory[(addr+1) as usize] = ((self.registers[reg as usize] >> 16) & 0xff) as u8;
-        self.memory[addr as usize] = ((self.registers[reg as usize] >> 8) & 0xff) as u8;
-        self.memory[(addr+1) as usize] = (self.registers[reg as usize] & 0xff) as u8;
+        self.memory[(addr+2) as usize] = ((self.registers[reg as usize] >> 8) & 0xff) as u8;
+        self.memory[(addr+3) as usize] = (self.registers[reg as usize] & 0xff) as u8;
     }
 
     /// load reg1 (val1) using memory at addr - addr+3 (val2)
