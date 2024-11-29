@@ -1,6 +1,6 @@
 import {exit} from "process";
 import { writeFileSync, readFileSync } from "fs";
-import { Jimp } from "Jimp";
+import { Jimp } from "jimp";
 let inputFile = readFileSync("main.p16", {encoding: "utf-8"});
 
 async function loadImage(path){
