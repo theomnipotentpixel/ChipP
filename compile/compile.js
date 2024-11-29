@@ -1,23 +1,7 @@
 const fs = require("fs");
 const exit = require("process").exit;
+const getPixels = require("get-pixels");
 let inputFile = fs.readFileSync("main.p16", {encoding: "utf-8"});
-
-function split_str(str){
-    var regx = /[^\s"]+|"([^"]*)"/gi;
-    var out = [];
-
-    do {
-        //Each call to exec returns the next regex match as an array
-        var match = regx.exec(str);
-        if (match != null)
-        {
-            //Index 1 in the array is the captured group if it exists
-            //Index 0 is the matched text, which we use if no captured group exists
-            out.push(match[1] ? match[1] : match[0]);
-        }
-    } while (match != null);
-    return out;
-}
 
 function op_mov(reg1, val){
     reg1 = parseInt(reg1);

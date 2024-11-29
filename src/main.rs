@@ -481,7 +481,7 @@ struct Args {
 #[macroquad::main("MyGame")]
 async fn main() {
     let args = Args::parse();
-    let rom_path = args.rom.unwrap_or("res/out.p".to_string());
+    let rom_path = args.rom.unwrap_or("compile/out.p".to_string());
     let mut state = Box::new(ChipP::new());
     state.load_rom(rom_path);
     request_new_screen_size(state.display_size[0] as f32 * 2.0, state.display_size[1] as f32 * 2.0);
