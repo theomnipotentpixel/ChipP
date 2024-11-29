@@ -55,7 +55,7 @@ impl ChipP {
                 ..Default::default()
             },
         ];
-        set_camera(&cameras[0]);
+        set_camera(&cameras[1]);
         Self {
             registers: [0; 32],
             pc: 0,
@@ -150,8 +150,13 @@ impl ChipP {
 
     pub fn draw_buffer(&mut self){
         set_default_camera();
+        let cb;
+        match self.current_buffer {
+            0 => {cb = 1;},
+            _ => {cb = 0;},
+        }
         draw_texture_ex(
-            &self.display_buffers[self.current_buffer].texture,
+            &self.display_buffers[cb].texture,
             0.,
             0.,
             WHITE,
@@ -409,14 +414,19 @@ impl ChipP {
         // println!("{}", height*width as usize * 4);
         for j in 0..height {
             for i in 0..width {
-                bytes[j * width + i] = self.peek8rom(rom_addr);
-                bytes[j * width + i + 1] = self.peek8rom(rom_addr+1);
-                bytes[j * width + i + 2] = self.peek8rom(rom_addr+2);
-                bytes[j * width + i + 3] = self.peek8rom(rom_addr+3);
+                bytes[(j * width + i)*4 + 1] = self.peek8rom(rom_addr+1);
+                bytes[(j * width + i)*4 + 2] = self.peek8rom(rom_addr+2);
+                bytes[(j * width + i)*4 + 3] = self.peek8rom(rom_addr+3);
+                bytes[(j * width + i)*4] = self.peek8rom(rom_addr);
                 rom_addr += 4;
             }
         }
+        // println!("{}, {}", width, height);
+        println!("{} {} {} {}", bytes[64], bytes[65], bytes[66], bytes[67]);
         let texture = Texture2D::from_rgba8(width as u16, height as u16, &bytes);
+        texture.set_filter(FilterMode::Nearest);
+        texture.update_from_bytes(width as u32, height as u32, &bytes);
+        println!("{:?}", texture.get_texture_data().get_pixel(5, 5));
         self.sprites.insert(addr, texture);
     }
 
@@ -461,7 +471,6 @@ impl ChipP {
     }
 }
 
-
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -482,7 +491,6 @@ async fn main() {
             break;
         }
         state.step();
-        // draw_rectangle(0.0, 0.0, 32.0, 32.0, RED);
         if last_frame.elapsed().as_secs_f32() > 1f32 / 60f32 {
             last_frame = Instant::now();
             next_frame().await;

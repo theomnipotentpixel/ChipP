@@ -275,7 +275,7 @@ function parse_program(lines){
         let params = split_str(line);
         let op = params.shift();
         if(op === "string"){
-            params[0] = params[0].replace(/\\n/g, "\n");
+            params[0] = params[0].replaceAll(/\\n/g, "\n");
             out = out.concat(params[0].split("").map(c => c.charCodeAt(0)));
             out = out.concat([0]);
         } else if(op === "bytes"){
