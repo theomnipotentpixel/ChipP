@@ -421,12 +421,9 @@ impl ChipP {
                 rom_addr += 4;
             }
         }
-        // println!("{}, {}", width, height);
-        println!("{} {} {} {}", bytes[64], bytes[65], bytes[66], bytes[67]);
         let texture = Texture2D::from_rgba8(width as u16, height as u16, &bytes);
         texture.set_filter(FilterMode::Nearest);
         texture.update_from_bytes(width as u32, height as u32, &bytes);
-        println!("{:?}", texture.get_texture_data().get_pixel(5, 5));
         self.sprites.insert(addr, texture);
     }
 

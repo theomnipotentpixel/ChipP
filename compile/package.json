@@ -2,14 +2,15 @@
   "name": "chipp-compile",
   "version": "1.0.0",
   "description": "Compile a ChipP script",
-  "main": "compile.js",
+  "main": "test.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "node compile.js"
+    "run": "node test.js"
   },
   "author": "theomnipotentpixel",
   "license": "ISC",
   "dependencies": {
-    "get-pixels": "^3.3.3"
+    "jimp": "^1.6.0",
+    "synchronous-promise": "^2.0.17"
   }
 }
