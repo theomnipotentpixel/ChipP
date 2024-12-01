@@ -55,7 +55,7 @@ impl ChipP {
                 ..Default::default()
             },
         ];
-        set_camera(&cameras[0]);
+        set_camera(&cameras[1]);
         Self {
             registers: [0; 32],
             pc: 0,
@@ -150,8 +150,13 @@ impl ChipP {
 
     pub fn draw_buffer(&mut self){
         set_default_camera();
+        let cb;
+        match self.current_buffer {
+            0 => {cb = 1;},
+            _ => {cb = 0;},
+        }
         draw_texture_ex(
-            &self.display_buffers[self.current_buffer].texture,
+            &self.display_buffers[cb].texture,
             0.,
             0.,
             WHITE,
@@ -217,8 +222,8 @@ impl ChipP {
         let addr = self.get32rom();
         self.memory[addr as usize] = ((self.registers[reg as usize] >> 24) & 0xff) as u8;
         self.memory[(addr+1) as usize] = ((self.registers[reg as usize] >> 16) & 0xff) as u8;
-        self.memory[addr as usize] = ((self.registers[reg as usize] >> 8) & 0xff) as u8;
-        self.memory[(addr+1) as usize] = (self.registers[reg as usize] & 0xff) as u8;
+        self.memory[(addr+2) as usize] = ((self.registers[reg as usize] >> 8) & 0xff) as u8;
+        self.memory[(addr+3) as usize] = (self.registers[reg as usize] & 0xff) as u8;
     }
 
     /// load reg1 (val1) using memory at addr - addr+3 (val2)
@@ -409,14 +414,16 @@ impl ChipP {
         // println!("{}", height*width as usize * 4);
         for j in 0..height {
             for i in 0..width {
-                bytes[j * width + i] = self.peek8rom(rom_addr);
-                bytes[j * width + i + 1] = self.peek8rom(rom_addr+1);
-                bytes[j * width + i + 2] = self.peek8rom(rom_addr+2);
-                bytes[j * width + i + 3] = self.peek8rom(rom_addr+3);
+                bytes[(j * width + i)*4 + 1] = self.peek8rom(rom_addr+1);
+                bytes[(j * width + i)*4 + 2] = self.peek8rom(rom_addr+2);
+                bytes[(j * width + i)*4 + 3] = self.peek8rom(rom_addr+3);
+                bytes[(j * width + i)*4] = self.peek8rom(rom_addr);
                 rom_addr += 4;
             }
         }
         let texture = Texture2D::from_rgba8(width as u16, height as u16, &bytes);
+        texture.set_filter(FilterMode::Nearest);
+        texture.update_from_bytes(width as u32, height as u32, &bytes);
         self.sprites.insert(addr, texture);
     }
 
@@ -461,7 +468,6 @@ impl ChipP {
     }
 }
 
-
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -472,7 +478,7 @@ struct Args {
 #[macroquad::main("MyGame")]
 async fn main() {
     let args = Args::parse();
-    let rom_path = args.rom.unwrap_or("res/out.p".to_string());
+    let rom_path = args.rom.unwrap_or("compile/out.p".to_string());
     let mut state = Box::new(ChipP::new());
     state.load_rom(rom_path);
     request_new_screen_size(state.display_size[0] as f32 * 2.0, state.display_size[1] as f32 * 2.0);
@@ -482,7 +488,6 @@ async fn main() {
             break;
         }
         state.step();
-        // draw_rectangle(0.0, 0.0, 32.0, 32.0, RED);
         if last_frame.elapsed().as_secs_f32() > 1f32 / 60f32 {
             last_frame = Instant::now();
             next_frame().await;

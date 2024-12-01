@@ -1,0 +1,17 @@
+{
+  "name": "chipp-compile",
+  "version": "1.0.0",
+  "description": "Compile a ChipP script",
+  "main": "compile.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "node compile.js"
+  },
+  "author": "theomnipotentpixel",
+  "license": "ISC",
+  "dependencies": {
+    "jimp": "^1.6.0",
+    "synchronous-promise": "^2.0.17"
+  }
+}

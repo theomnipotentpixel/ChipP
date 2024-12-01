@@ -1,0 +1,8 @@
+jmp start
+label spr
+load_img test.png
+label start
+mov 0 0
+draw_sprite 0 0 spr
+swap_buffers
+bytes 0x00
